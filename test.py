@@ -6,6 +6,7 @@ from test.sr2 import test_line
 from test.sr3 import test_model
 from test.lab1 import fill_polygon
 from test.sr5 import paint_with_texture
+from test.sr6 import transformations
 
 if len(sys.argv) > 1:
     if sys.argv[1] == 'line':
@@ -16,6 +17,8 @@ if len(sys.argv) > 1:
         fill_polygon()
     elif sys.argv[1] =='texture':
         paint_with_texture()
+    elif sys.argv[1] == 'trans':
+        transformations()
 
 
 # test = OpenGl()

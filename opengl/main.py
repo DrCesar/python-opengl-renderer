@@ -15,6 +15,13 @@ from opengl.models.vectors import V3
 from opengl.models.texture import Texture
 from opengl.models.byte_struct import *
 
+ident = [
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]
+]
+
 def color(r, g, b):
     return bytes([round(b), round(g), round(r)])
 
@@ -23,6 +30,21 @@ def sub(v0, v1):
 
 def dot(v0, v1):
     return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z
+
+
+def matmul(m1, m2):
+    res = []
+    for j in range(4):
+        vec = []
+        for i in range(4):
+            temp = 0
+            for cell in range(4):
+                temp += m1[j][cell] * m2[cell][i]
+            vec.append(temp)
+        res.append(vec)
+
+    return res
+
 
 def cross(v0, v1):
 
@@ -64,20 +86,24 @@ def bonding_box(*vertices):
 
 class OpenGl:
 
-    def __init__(self, name='image', flag_zbuffer=False, texture_file=None):
+    def __init__(self, name='image', flag_zbuffer=False, texture_file=None, trans_flag=False):
         self.name = name
         self.win_width = 0
         self.win_height = 0
         self.color = color(0, 0, 0)
         self.pixels = []
         self.light = V3(0, 0, 1)
+        self.camera = V3(1, 0, 5)
+        self.center = V3(0, 0, 0)
+        self.up = V3(0, 1, 0)
         self.flag_zbuffer = flag_zbuffer
+        self.trans_flag = trans_flag
         self.texture = None
         if texture_file:
             self.texture = Texture(texture_file)
 
-    def glInit(self, name='image', flag_zbuffer=False, texture_file=None):
-        self.__init__(name, flag_zbuffer, texture_file)
+    def glInit(self, name='image', flag_zbuffer=False, texture_file=None, trans_flag=False):
+        self.__init__(name, flag_zbuffer, texture_file, trans_flag)
 
 
     def glCreateWindow(self, width, height):
@@ -91,6 +117,15 @@ class OpenGl:
         self.view_y = y
         self.view_width= width
         self.view_height = height
+
+        # self.viewport = ident
+        self.viewport = [
+            [self.view_width/2, 0, 0, self.view_width/2],
+            [0, self.view_height/2, 0, self.view_height/2],
+            [0, 0, 128, 128],
+            [0, 0, 0, 1]
+        ]
+
 
     def denormalize_x(self, x):
         return math.trunc((x + 1) * self.view_width / 2 + self.view_x)
@@ -199,7 +234,7 @@ class OpenGl:
                     self.__vertex(x, y)
 
 
-    def glFillTriangle(self, v_a, v_b, v_c, color=None, texture_vertices=None):
+    def glFillTriangle(self, v_a, v_b, v_c, color=None, texture_vertices=None, intensity=None):
         bb_min, bb_max = bonding_box(v_a, v_b, v_c)
 
         for y in range(bb_min.y, bb_max.y + 1):
@@ -209,31 +244,125 @@ class OpenGl:
                     continue
 
                 z = round(v_a.z * u + v_b.z * v + v_c.z * w)
-                
-                if z > self.zbuffer.pixels[y][x]:
+                # print(y, x, z)
+                if y < len(self.zbuffer.pixels) and x < len(self.zbuffer.pixels[0]) and z > self.zbuffer.pixels[y][x]:
                     if texture_vertices:
                         tv_a, tv_b, tv_c = texture_vertices
                         tx = round((tv_a.x * u + tv_b.x * v + tv_c.x * w) * self.texture.width) - 1
                         ty = round((tv_a.y * u + tv_b.y * v + tv_c.y * w) * self.texture.height) - 1
+                        col =
                         color = self.texture.colors[ty][tx]
                         self.texture.outline_polygon(texture_vertices)
 
+                    print(color)
                     self.__vertex(x, y, color)
                     self.zbuffer.add_z(x, y, z)
 
+    def __projection(self):
+        # self.projection = ident
+        self.projection = [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, -0.002, 1]
+        ]
 
-    def __transform(self, v, translate, scale):
-        return V3(
-            (v[0] + translate[0]) * scale[0],
-            (v[1] + translate[1]) * scale[1],
-            (v[2] + translate[2]) * scale[2],
-        )
+    def __view(self):
+        z = vect_normalize(sub(self.camera, self.center))
+        x = vect_normalize(cross(self.up, z))
+        y = vect_normalize(cross(z, x))
 
+        M =[
+            [x.x, x.y, x.z, 0],
+            [y.x, y.y, y.z, 0],
+            [z.x, z.y, z.z, 0],
+            [  0,   0,   0, 1]
+        ]
+
+        O = [
+            [1, 0, 0, -self.center.x],
+            [0, 1, 0, -self.center.y],
+            [0, 0, 1, -self.center.z],
+            [0, 0, 0,         1]
+        ]
+        self.view = matmul(M, O)
+
+
+    def __model(self):
+        self.model = ident
+
+
+    def __transform(self, v, translate, scale, rotate):
+        self.__projection()
+        self.__view()
+        # self.__model()
+
+        # print('vertices', v)
+        if self.trans_flag:
+            v_m = [
+                [v[0], 0, 0, 0],
+                [v[1], 0, 0, 0],
+                [v[2], 0, 0, 0],
+                [1, 0, 0, 0]
+            ]
+
+            trans_m = [
+                [1, 0, 0, translate[0]],
+                [0, 1, 0, translate[1]],
+                [0, 0, 1, translate[2]],
+                [0, 0, 0, 1]
+            ]
+            scale_m = [
+                [scale[0], 0, 0, 0],
+                [0, scale[1], 0, 0],
+                [0, 0, scale[2], 0],
+                [0, 0, 0, 1]
+            ]
+
+            a_x, a_y, a_z = rotate
+            r_x = [
+                [1, 0, 0, 0],
+                [0, math.cos(a_x), -math.sin(a_x), 0],
+                [0, math.sin(a_x), math.cos(a_x), 0],
+                [0, 0, 0, 1]
+            ]
+            r_y = [
+                [math.cos(a_y), 0, math.sin(a_y), 0],
+                [0, 1, 0, 0],
+                [-math.sin(a_y), 0, math.cos(a_y), 0],
+                [0, 0, 0, 1]
+            ]
+            r_z = [
+                [math.cos(a_z), -math.sin(a_z), 0, 0],
+                [math.sin(a_z), math.cos(a_z), 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]
+            ]
+
+            rotat_m = matmul(r_z, matmul(r_x, r_y))
+
+            self.model = matmul(trans_m, matmul(rotat_m, scale_m))
+            # print(v_m)
+            b = matmul(self.viewport, matmul(self.projection, matmul(self.view, matmul(self.model, v_m))))
+            # print(b)
+            # b = matmul(self.model, v_m)
+            # print(V3(b[0][0]/b[3][0], b[1][0]/b[3][0], b[2][0]/b[3][0]))
+            return V3(b[0][0]/b[3][0], b[1][0]/b[3][0], b[2][0]/b[3][0])
+            print('hola')
+        else:
+            return V3(
+                v[0] * scale[0] + translate[0],
+                v[1] * scale[1] + translate[1],
+                v[2] * scale[2] + translate[2],
+            )
+
+    # model _. taslacion y escala y rotacion
+    # view es la camara -. eye, center  y up
+    # projection -. 
 
     def glOpenModel(self, filename, translate=(0, 0, 0), scale=(1, 1, 1)):
 
         model = Obj(filename)
-        print('hola')
 
         for face in model.faces:
             num_v = len(face)
@@ -244,19 +373,21 @@ class OpenGl:
                 v_b = model.vertices[face[1][0] - 1]
                 v_c = model.vertices[face[2][0] - 1]
 
-                v_a = self.__transform(v_a, translate, scale)
-                v_b = self.__transform(v_b, translate, scale)
-                v_c = self.__transform(v_c, translate, scale)
+                v_a = self.__transform(v_a, translate, scale, (0, 0, 1))
+                v_b = self.__transform(v_b, translate, scale, (0, 0, 1))
+                v_c = self.__transform(v_c, translate, scale, (0, 0, 1))
 
-                face_norm = vect_normalize((v_b - v_a) * (v_c - v_a))
+                face_norm = vect_normalize((v_b - v_a) *(v_c - v_a))
 
                 intensity = dot(self.light, face_norm)
 
+                # print(v_a, v_b, v_c)
                 if self.texture:
                     tv_a = V3(*model.texture_vertices[face[0][1] - 1])
                     tv_b = V3(*model.texture_vertices[face[1][1] - 1])
                     tv_c = V3(*model.texture_vertices[face[2][1] - 1])
                     # print('safo')
+                    print(tv_a, tv_b, tv_c)
                     self.glFillTriangle(v_a, v_b, v_c, texture_vertices=(tv_a, tv_b, tv_c))
                 else:
                     if intensity >= 0 and intensity <= 1:

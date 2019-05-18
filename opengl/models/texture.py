@@ -79,7 +79,6 @@ class Texture(object):
         for i in range(len(polygon_vertices)):
             v0 = polygon_vertices[i - 1] 
             v1 = polygon_vertices[i]
-            print(v1 * V3(self.width, self.height, 0))
             self.__line(v0, v1)
 
 

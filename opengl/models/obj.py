@@ -17,7 +17,6 @@ class Obj(object):
         self.z_max = 0
         self.z_min = 0
         self.read()
-        # print(self.max)
 
     def read(self):
         for line in self.lines:
