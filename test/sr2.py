@@ -3,7 +3,7 @@ from opengl.main import OpenGl
 def test_line():
     test = OpenGl()
 
-    test.glInit()
+    test.glInit(output_dir='out/sr2', name='sr2.bmp')
     test.glCreateWindow(300, 300)
     test.glViewPort(0, 0, 300, 300)
     test.glColor(1, 1, 1)

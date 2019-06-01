@@ -12,6 +12,7 @@ class Obj(object):
             self.lines = f.read().splitlines()
         self.vertices = []
         self.texture_vertices = []
+        self.normals = []
         self.faces = []
         self.max = 0
         self.z_max = 0
@@ -29,5 +30,7 @@ class Obj(object):
                             self.max = float(x)
                 elif prefix == 'vt':
                     self.texture_vertices.append(list(map(float, value.split(' '))))
+                elif prefix == 'vn':
+                    self.normals.append(list(map(float, value.split(' '))))
                 elif prefix == 'f':
                     self.faces.append([list(map(safe_int, face.split('/'))) for face in value.split(' ')])

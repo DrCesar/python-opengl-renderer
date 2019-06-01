@@ -28,12 +28,12 @@ class Texture(object):
                 b = ord(f.read(1))
                 g = ord(f.read(1))
                 r = ord(f.read(1))
-                vec.append(color(r, g, b))
+                vec.append([r, g, b])
 
             self.colors.append(vec)
         f.close()
 
-    def __in_range(self, x, y):
+    def in_range(self, x, y):
         return y < len(self.colors) and x < len(self.colors[0])
 
     def __line(self, point0, point1):
@@ -62,9 +62,9 @@ class Texture(object):
 
         for x in range(round(x0), round(x1) + 1):
             if (x < self.width and y < self.height) or (steep and x < self.height and y < self.width):
-                if steep and self.__in_range(y, x):
+                if steep and self.in_range(y, x):
                     self.colors[round(x)][round(y)] = color(255, 255, 255)
-                elif self.__in_range(x, y):
+                elif self.in_range(x, y):
                     self.colors[round(y)][round(x)] = color(255, 255, 255)
             
             offset += dy * 2
