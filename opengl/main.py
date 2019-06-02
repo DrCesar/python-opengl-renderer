@@ -88,7 +88,7 @@ def bonding_box(*vertices):
 
 class OpenGl:
 
-    def __init__(self, output_dir='out', name='image', flag_zbuffer=False, trans_flag=False, shader_flag=False):
+    def __init__(self, output_dir='out', name='image', flag_zbuffer=False, flag_texture=False, trans_flag=False, shader_flag=False):
         self.name = name
         self.win_width = 0
         self.win_height = 0
@@ -100,6 +100,7 @@ class OpenGl:
         self.up = V3(0, 1, 0)
         self.shader_flag = shader_flag
         self.flag_zbuffer = flag_zbuffer
+        self.flag_texture = flag_texture
         self.trans_flag = trans_flag
         self.texture = None
         self.output_dir = output_dir
@@ -108,8 +109,8 @@ class OpenGl:
         # if texture_file:
         #     self.texture = Texture(texture_file)
 
-    def glInit(self, output_dir='out', name='image', flag_zbuffer=False, trans_flag=False, shader_flag=False):
-        self.__init__(output_dir, name, flag_zbuffer, trans_flag, shader_flag)
+    def glInit(self, output_dir='out', name='image', flag_zbuffer=False, flag_texture=False, trans_flag=False, shader_flag=False):
+        self.__init__(output_dir, name, flag_zbuffer, flag_texture, trans_flag, shader_flag)
 
 
     def glCreateWindow(self, width=0, height=0, image=None):
@@ -267,7 +268,8 @@ class OpenGl:
                             else:
                                 color = gen_color(*color)
 
-                            self.texture.outline_polygon(texture_vertices)
+                            if self.flag_texture:
+                                self.texture.outline_polygon(texture_vertices)
                         else:
                             if self.shader:
                                 color = self.shader(normals, (u, v, w), temp_color, light, x, y, z)
@@ -461,7 +463,7 @@ class OpenGl:
         self.shader = shader
         print(texture_filename)
         if texture_filename:
-            self.texture = Texture(texture_filename)
+            self.texture = Texture(texture_filename, self.flag_texture)
 
         for i, face in enumerate(model.faces):
             num_v = len(face)
@@ -576,6 +578,7 @@ class OpenGl:
             z.write(dword(0))
             z.write(dword(0))
 
+
         if self.flag_zbuffer:
             self.zbuffer.normalize()
 
@@ -588,3 +591,6 @@ class OpenGl:
         f.close()
         if self.flag_zbuffer:
             z.close()
+
+        if self.flag_texture:
+            self.texture.write_out()

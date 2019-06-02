@@ -3,7 +3,7 @@ from opengl.main import OpenGl
 def paint_with_texture():
     test = OpenGl()
 
-    test.glInit(output_dir='out/sr5')
+    test.glInit(output_dir='out/sr5', flag_texture=True)
     test.glCreateWindow(500, 500)
     test.glViewPort(0, 0, 500, 500)
     test.glColor(1, 1, 1)
