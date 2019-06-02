@@ -2,8 +2,8 @@
 # Proyecto de Renderización con Python.
 ---
 
-Para probar cada una de las tareas o labs se ejecuta el archivo **test.py**
-ID
+Para probar cada una de las tareas o labs se ejecuta el archivo **test.py**  
+(ID)  
 SR2  `python test.py line` | `python test.py sr2`  
 SR3  `python test.py model` | `python test.py sr3`  
 SR4  `python test.py zbuffer` | `python test.py sr4`  
@@ -15,4 +15,4 @@ LAB3  `python test.py shaders` | `python test.py lab3`
 
 PROJECT  `python test.py project`  
 
-Todas las imagenes de resultados salen en el dir **out/<id>**
+Todas las imagenes de resultados salen en el dir **out/(ID)**
