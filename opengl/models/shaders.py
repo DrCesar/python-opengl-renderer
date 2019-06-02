@@ -10,7 +10,7 @@ def dot(v0, v1):
     return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z
 
 
-def gouraud(normals, barycentric, color, light, x, y):
+def gouraud(normals, barycentric, color, light, x, y, z):
     u, v, w = barycentric
     n_a, n_b, n_c = normals
     intensity_a = dot(n_a, light)
@@ -25,7 +25,7 @@ def gouraud(normals, barycentric, color, light, x, y):
     return gen_color(r, g, b)
 
 
-def planet_shader(normals, barycentric, color, light, x, y):
+def planet_shader(normals, barycentric, color, light, x, y, z):
     color = (255, 215, 0)
 
     light_gold = (99, 91, 54)
@@ -56,17 +56,24 @@ def planet_shader(normals, barycentric, color, light, x, y):
 
     return gen_color(r, g, b)
 
-def batman_shader(normals, barycentric, color, light, x, y):
-    black = (50, 50, 50)
+def batman_shader(normals, barycentric, color, light, x, y, z):
+    light_gray = (50, 50, 50)
+    black_gray = (20, 20, 20)
     white = (255, 255, 255)
     light *= 2
 
     rand = random.random() * 0.15 + math.cos(y * 1) * 0.85
 
-    if rand < 0.95:
-        color = black
+    if z < -2355:
+        color = (138, 7, 7)
+    elif z < -2330:
+        color = black_gray
     else:
-        color = white
+        color = light_gray
+    # elif rand < 0.95:
+    #     color = black
+    # else:
+    #     color = white
 
     u, v, w = barycentric
     n_a, n_b, n_c = normals
@@ -82,7 +89,7 @@ def batman_shader(normals, barycentric, color, light, x, y):
 
     return gen_color(r, g, b)
 
-def batarang_shader(normals, barycentric, color, light, x, y):
+def batarang_shader(normals, barycentric, color, light, x, y, z):
 
     white = (255, 255, 255)
     metallic = (188, 198, 204)
@@ -106,7 +113,7 @@ def batarang_shader(normals, barycentric, color, light, x, y):
 
     return gen_color(r, g, b)
 
-def batmobile_shader(normals, barycentric, color, light, x, y):
+def batmobile_shader(normals, barycentric, color, light, x, y, z):
 
     if color[0] < 50:
         color = [x - 10 if x > 10 else 0 for x in color]

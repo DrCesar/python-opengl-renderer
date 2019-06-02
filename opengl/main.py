@@ -227,7 +227,7 @@ class OpenGl:
                 v0 = polygon_vertices[i - 1]
                 v1 = polygon_vertices[i]
 
-                if (y <= v0[1] and y >= v1[1]) or (y <= v1[1] and y >= v0[1]):
+                if ((y <= v0[1] and y >= v1[1]) or (y <= v1[1] and y >= v0[1])) and (v0[1] != v1[1]):
                     x = ((v0[0] - v1[0])/(v0[1] - v1[1])) * (y - v0[1]) + v0[0] 
                     
                     if x >= x_min and x <= x_max:
@@ -263,14 +263,14 @@ class OpenGl:
                                 color = self.color
 
                             if self.shader:
-                                color = self.shader(normals, (u, v, w), color, light, x, y)
+                                color = self.shader(normals, (u, v, w), color, light, x, y, z)
                             else:
                                 color = gen_color(*color)
 
                             self.texture.outline_polygon(texture_vertices)
                         else:
                             if self.shader:
-                                color = self.shader(normals, (u, v, w), temp_color, light, x, y)
+                                color = self.shader(normals, (u, v, w), temp_color, light, x, y, z)
                             else:
                                 color = temp_color
                             
